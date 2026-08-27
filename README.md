@@ -22,13 +22,17 @@ sample-splitting/
 │   ├── stable_rng.R                   # rstable_new()
 │   ├── estimation_functions.R         # wls.ests.tvec(), run.split()
 │   ├── bootstrap_functions.R          # run.split.mult()
-│   ├── reduced_split_bootstrap.R      # reduced.split.cov/se()      
+│   ├── reduced_split_bootstrap.R      # reduced.split.cov/se()
 │   └── combination_functions.R        # compute_optimal()
 ├── scripts/
 │   ├── 01_simulated_example.R         # simulate -> estimate -> SE
 │   └── 02_xrp_application.R           # real data -> estimate -> SE
-└── data/
-    └── ripple_2013-08-05_2025-05-27.csv
+├── data/
+│   └── ripple_2013-08-05_2025-05-27.csv
+└── simulation_results/
+    ├── sim_combined.rds                # estimator-level simulation results for each config
+    └── rmse_sigma.csv                  # RMSE summaries on sigma scale
+    └── rmse_alpha.csv                  # RMSE summaries on alpha scale
 ```
 
 ---
@@ -149,6 +153,11 @@ Z ──► reduced.split.se() ──► cov, SE ──► compute_optimal()
 
 ---
 
-## Still to add
+## Simulation results
 
-A citation for the paper, once it has a DOI or preprint number.
+The `simulation_results/` directory contains the saved output from the
+simulation studies reported in the paper, including additional RMSE summaries
+not shown in the main text. The `.rds` file contains the individual estimator
+values for each simulation configuration and replication, while the `.csv`
+files contain the corresponding RMSE summaries used for reporting and
+comparison.
