@@ -3,7 +3,7 @@
 R code accompanying the paper on estimating the (stable) tail index $\alpha$ or
 transformed scale $\sigma = 2^{1/\alpha}$ using repeated sample splitting, and a
 two-sample location-scale formulation. Also implements a reduced-split
-bootstrap for inference.
+bootstrap for inference. For the current manuscript, see arXiv:1705.09840.
 
 This repo contains the methodology functions plus two runnable scripts: a
 worked example that illustrates the methods on simulated data, and the
