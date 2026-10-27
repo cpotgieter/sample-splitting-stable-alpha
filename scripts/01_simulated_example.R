@@ -7,7 +7,7 @@
 #   2. set the tuning vectors
 #   3. estimate sigma by repeated splitting, transform to alpha if desired
 #   4. bootstrap standard errors by the reduced-split procedure
-#   5. combine the estimators using the inverse-covariance optimal weights
+#   5. combine the WLS estimators (Avg, InvVar, MinVar)
 #
 # Run from the repository root:
 #
@@ -31,16 +31,16 @@ Z <- rstable_new(n, alpha = alpha_true, beta = beta_true)
 
 #  2. Tuning vectors 
 
-# One ratio estimator at the quartiles, and three WLS estimators using
-# k = 5, 10, 16 interior quantile levels. 
+# One ratio estimator at the quartiles, and four WLS estimators using
+# k = 4, 6, 9, 13 interior quantile levels. 
 
 t_ratio <- list(c(1/4, 3/4)) # IQR-based estimator (very robust)
 
-t_wls <- lapply(c(5, 10, 16), function(m)
+t_wls <- lapply(c(4, 6, 9, 13), function(m)
   round(seq(1/(m + 1), m/(m + 1), length.out = m), 3)
 )
 
-est.names <- c("iqr_ratio", "wls05", "wls10", "wls16")
+est.names <- c("iqr_ratio", "wls04", "wls06", "wls09", "wls13")
 
 
 #  3. Point estimation 
@@ -109,18 +109,17 @@ names(se.hat.alpha) <- est.names
 # Estimated standard errors
 print(se.hat.alpha)
 
-#  5. Optimal combination (illustrated for alpha scale) 
+#  5. Combining the WLS estimators (illustrated for alpha scale) 
 
-opt.all <- compute_optimal(boot.out.alpha$cov, alpha.hat)
-opt.wls <- compute_optimal(boot.out.alpha$cov[2:4, 2:4], alpha.hat[2:4])
+simple <- combine_simple(boot.out.alpha$cov[2:5, 2:5], alpha.hat[2:5])
 
 
 #  6. Results 
 
 results <- data.frame(
-  Estimator = c(est.names, "optimal (all)", "optimal (WLS only)"),
-  Estimate  = c(alpha.hat, opt.all$estimate, opt.wls$estimate),
-  SE        = c(se.hat.alpha, sqrt(opt.all$var), sqrt(opt.wls$var)),
+  Estimator = c(est.names, names(simple)),
+  Estimate  = c(alpha.hat, sapply(simple, `[[`, "estimate")),
+  SE        = c(se.hat.alpha, sqrt(sapply(simple, `[[`, "var"))),
   stringsAsFactors = FALSE
 )
 
@@ -133,14 +132,14 @@ print(format(results, digits = 4), row.names = FALSE)
 # that cannot be removed by taking more splits.
 
 Bgrid   <- 1:B.full
-var.wls10 <- boot.out.alpha$Sigma[3, 3] / Bgrid +
-             (Bgrid - 1) / Bgrid * boot.out.alpha$Gamma[3, 3]
+var.wls09 <- boot.out.alpha$Sigma[4, 4] / Bgrid +
+             (Bgrid - 1) / Bgrid * boot.out.alpha$Gamma[4, 4]
 
-plot(Bgrid, sqrt(var.wls10), type = "l", log = "x",
+plot(Bgrid, sqrt(var.wls09), type = "l", log = "x",
      xlab = "Number of splits (B)", ylab = "SE of alpha.hat",
-     main = "Reduced-split variance extrapolation (WLS_10)")
-abline(h = sqrt(boot.out.alpha$Gamma[3, 3]), lty = 3, col = "grey40")
+     main = "Reduced-split variance extrapolation (WLS_9)")
+abline(h = sqrt(boot.out.alpha$Gamma[4, 4]), lty = 3, col = "grey40")
 abline(v = max.split, lty = 2, col = "grey40")
 
-cat("\nSE floor as B -> Inf (WLS_10):",
-    round(sqrt(boot.out.alpha$Gamma[3, 3]), 4), "\n")
+cat("\nSE floor as B -> Inf (WLS_9):",
+    round(sqrt(boot.out.alpha$Gamma[4, 4]), 4), "\n")

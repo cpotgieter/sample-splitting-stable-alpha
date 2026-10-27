@@ -112,11 +112,11 @@ par(op)
 
 t_ratio <- list(c(1/4, 3/4))
 
-t_wls <- lapply(c(5, 10, 16), function(m)
+t_wls <- lapply(c(4, 6, 9, 13), function(m)
   round(seq(1/(m + 1), m/(m + 1), length.out = m), 3)
 )
 
-est.names <- c("iqr_ratio", "wls05", "wls10", "wls16")
+est.names <- c("iqr_ratio", "wls04", "wls06", "wls09", "wls13")
 
 
 #  5. Estimation and inference for each subperiod 
@@ -148,13 +148,12 @@ analyse <- function(x, label) {
   names(se.hat) <- est.names
 
   # Optimally combined estimators
-  opt.all <- compute_optimal(boot.out$cov, alpha.hat)
-  opt.wls <- compute_optimal(boot.out$cov[2:4, 2:4], alpha.hat[2:4])
+  simple <- combine_simple(boot.out$cov[2:5, 2:5], alpha.hat[2:5])
 
   tab <- data.frame(
-    Estimator = c(est.names, "optimal (all)", "optimal (WLS only)"),
-    Estimate  = c(alpha.hat, opt.all$estimate, opt.wls$estimate),
-    SE        = c(se.hat, sqrt(opt.all$var), sqrt(opt.wls$var)),
+    Estimator = c(est.names, names(simple)),
+    Estimate  = c(alpha.hat, sapply(simple, `[[`, "estimate")),
+    SE        = c(se.hat, sqrt(sapply(simple, `[[`, "var"))),
     stringsAsFactors = FALSE
   )
   tab$Lower <- tab$Estimate - 1.96 * tab$SE
@@ -169,8 +168,7 @@ analyse <- function(x, label) {
        cov       = boot.out$cov,
        Sigma     = boot.out$Sigma,
        Gamma     = boot.out$Gamma,
-       opt.all   = opt.all,
-       opt.wls   = opt.wls,
+       simple    = simple,
        table     = tab)
 }
 
@@ -194,15 +192,15 @@ cat("===============================================================\n\n")
 print(summary.tab, row.names = FALSE)
 
 
-# Informal comparison of the two periods using the optimally combined
+# Informal comparison of the two periods using the inverse-variance combined
 # estimator. The subperiods are disjoint, so treating them as independent is
 # reasonable, but note this ignores any estimation of the change point and the
 # fact that both were chosen after seeing the series.
 
-d.est <- res$new$opt.all$estimate - res$old$opt.all$estimate
-d.se  <- sqrt(res$new$opt.all$var + res$old$opt.all$var)
+d.est <- res$new$simple$InvVar$estimate - res$old$simple$InvVar$estimate
+d.se  <- sqrt(res$new$simple$InvVar$var + res$old$simple$InvVar$var)
 
-cat(sprintf("\nLate minus early (optimal combination): %.4f  (SE %.4f, z = %.2f)\n",
+cat(sprintf("\nLate minus early (inverse-variance combination): %.4f  (SE %.4f, z = %.2f)\n",
             d.est, d.se, d.est / d.se))
 cat("Interpretation is left to the reader; see the caveat above.\n")
 

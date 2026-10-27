@@ -1,9 +1,9 @@
 # Cumulative split estimates: same repeated-splitting procedure as
 # run.split(), but returning the running mean after 1, ..., n.splits
 # splits. This is the input to the reduced-split bootstrap.
-# Source: split_sample_functions.R (lines 152-202), unmodified.
 
-run.split.mult <- function(Z, n.splits, p, t_ratio, t_wls) {
+run.split.mult <- function(Z, n.splits, p, t_ratio, t_wls, weights = c("diag", "gls")) {
+  weights <- match.arg(weights)   # see wls.ests.tvec(); "gls" generally performs subpar
   # Number of ratio and wls values to compute
   n_ratio <- length(t_ratio)
   n_wls <- length(t_wls)
@@ -40,7 +40,7 @@ run.split.mult <- function(Z, n.splits, p, t_ratio, t_wls) {
     
     # Compute the weighted least squares estimator for each element in t_wls.
     wls_estimates <- sapply(1:n_wls, function(k) {
-      wls.ests.tvec(X, Y, t_wls[[k]])
+      wls.ests.tvec(X, Y, t_wls[[k]], weights = weights)
     })
     
     # Store the combined estimates: first ratios, then wls estimates.

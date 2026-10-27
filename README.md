@@ -23,7 +23,7 @@ sample-splitting/
 │   ├── estimation_functions.R         # wls.ests.tvec(), run.split()
 │   ├── bootstrap_functions.R          # run.split.mult()
 │   ├── reduced_split_bootstrap.R      # reduced.split.cov/se()      
-│   └── combination_functions.R        # compute_optimal()
+│   └── combination_functions.R        # combine_simple(), compute_optimal()
 ├── scripts/
 │   ├── 01_simulated_example.R         # simulate -> estimate -> SE
 │   └── 02_xrp_application.R           # real data -> estimate -> SE
@@ -52,7 +52,7 @@ used only in the optional comparison block of `scripts/02`.
 source("load_all.R")
 
 t_ratio <- list(c(1/4, 3/4))
-t_wls   <- lapply(c(5, 10, 16), function(m)
+t_wls   <- lapply(c(4, 6, 9, 13), function(m)
   round(seq(1/(m + 1), m/(m + 1), length.out = m), 3))
 
 Z <- rstable_new(400, alpha = 1.2, beta = 0.25)
@@ -82,7 +82,7 @@ $\sigma$ scale instead.
 End-to-end walkthrough with a known truth. Generates stable data with
 `rstable_new()`, estimates $\sigma$ and $\alpha$ with four tuning choices,
 computes reduced-split bootstrap standard errors on both scales, and forms the
-inverse-covariance optimal combination on the $\alpha$ scale. It also shows a
+Avg / InvVar / MinVar combinations of the WLS estimators on the $\alpha$ scale. It also shows a
 plot of how SE extrapolation works in the reduced-split bootstrap, including
 the floor that additional splits cannot remove.
 
@@ -108,7 +108,7 @@ replicates, `max.split = 25`).
 **`wls.ests.tvec(X, Y, t0)`** — two-sample WLS scale estimator. Builds the
 Brownian-bridge covariance $\Sigma_{ij} = \min(t_i,t_j) - t_i t_j$, estimates
 the density of `Y` by KDE on the `asinh` scale with bandwidth `bw.nrd`, forms
-the weight matrix, and returns the WLS slope.
+the weights, and returns the WLS slope. The `weights` argument (also accepted by `run.split()`, `run.split.mult()` and `reduced.split.se()`) is `"diag"` (default; density weights $\mathrm{diag}(f_Y^2)$, as in the paper) or `"gls"` (full GLS weights $D C^{-1} D$). `"gls"` generally performs subpar in our simulations and is kept for comparison only. The kernel bandwidth is the plug-in `ks::hpi()`, with a Silverman fallback.
 
 **`run.split(Z, n.splits, p, t_ratio, t_wls)`** — main estimator. For each of
 `n.splits` Bernoulli($p$) splits, forms the baseline sample `X` and all unique
@@ -132,6 +132,8 @@ $\alpha$ scale. The reconstruction is not guaranteed positive definite — the
 subtraction $B_1 C_{B_1} - (B_1-1)\Gamma$ can produce small negative
 eigenvalues — so eigenvalues are floored at `pd.tol` times the mean diagonal
 and `$cov.repaired` records whether that was necessary.
+
+**`combine_simple(covmat, est)`** — Avg, InvVar (inverse-variance) and MinVar combinations of the WLS estimators.
 
 **`compute_optimal(covmat, est)`** — inverse-covariance optimal linear
 combination. Weights are unconstrained and may be negative when estimators are

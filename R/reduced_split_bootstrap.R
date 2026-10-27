@@ -65,6 +65,7 @@ reduced.split.cov <- function(boot.est.splits, B.full, B.min = 2) {
 
 reduced.split.se <- function(Z, n.boot, max.split, B.full, p,
                              t_ratio, t_wls,
+                             weights = c("diag", "gls"),
                              alpha.scale = TRUE,
                              B.min = 2,
                              verbose = TRUE,
@@ -77,6 +78,7 @@ reduced.split.se <- function(Z, n.boot, max.split, B.full, p,
   # BEFORE computing covariances, so the returned covariance is on the alpha
   # scale. This matches XRE_analysis.R.
   
+  weights <- match.arg(weights)   # "gls" generally performs subpar; see wls.ests.tvec()
   n     <- length(Z)
   n.est <- length(t_ratio) + length(t_wls)
   
@@ -89,7 +91,8 @@ reduced.split.se <- function(Z, n.boot, max.split, B.full, p,
                               n.splits = max.split,
                               p        = p,
                               t_ratio  = t_ratio,
-                              t_wls    = t_wls)
+                              t_wls    = t_wls,
+                              weights  = weights)
     
     for (k in seq_len(max.split)) {
       boot.est.splits[b, , k] <- bsplits[[k]][seq_len(n.est)]
